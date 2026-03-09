@@ -133,9 +133,40 @@ target_selected() {
   return 1
 }
 
+validate_selected_targets() {
+  local requested name group _source_rel _target_pattern found
+
+  if [ "${#selected_targets[@]}" -eq 0 ]; then
+    return 0
+  fi
+
+  for requested in "${selected_targets[@]}"; do
+    found="false"
+    while IFS='|' read -r name group _source_rel _target_pattern; do
+      [ -z "$name" ] && continue
+      case "$name" in
+        \#*) continue ;;
+      esac
+      if [ "$name" != "$requested" ]; then
+        continue
+      fi
+      if [ "$group_filter" != "all" ] && [ "$group_filter" != "$group" ]; then
+        continue
+      fi
+      found="true"
+      break
+    done < "$manifest_path"
+
+    if [ "$found" != "true" ]; then
+      echo "Unknown or filtered target: $requested" >&2
+      exit 1
+    fi
+  done
+}
+
 backup_target() {
   local target="$1"
-  local timestamp backup_path
+  local timestamp backup_path suffix
 
   if [ "$backup_enabled" != "true" ]; then
     return 0
@@ -147,6 +178,11 @@ backup_target() {
 
   timestamp="$(date +%Y%m%d%H%M%S)"
   backup_path="${target}.bak.${timestamp}"
+  suffix=0
+  while [ -e "$backup_path" ] || [ -L "$backup_path" ]; do
+    suffix=$((suffix + 1))
+    backup_path="${target}.bak.${timestamp}.${suffix}"
+  done
   echo "backup: $target -> $backup_path"
   if [ "$dry_run" = "false" ]; then
     mv "$target" "$backup_path"
@@ -191,6 +227,8 @@ sync_symlink() {
 }
 
 matched_count=0
+
+validate_selected_targets
 
 while IFS='|' read -r name group source_rel target_pattern; do
   [ -z "$name" ] && continue

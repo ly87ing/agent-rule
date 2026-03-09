@@ -1,7 +1,5 @@
 # Agent Behavior Guidelines
 
-> This file is centrally maintained in `ly87ing/agent-rule` and synchronized to local agent rule paths. Do not edit synced copies directly.
-
 ## 1. Default Language and Output Style
 
 - **MANDATORY:** The agent **MUST** use Chinese (Simplified) for **ALL** interactions, outputs, and generated content.

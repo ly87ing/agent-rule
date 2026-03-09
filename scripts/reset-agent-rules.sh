@@ -36,4 +36,8 @@ while [ "$#" -gt 0 ]; do
 done
 
 # reset 明确固定为 copy + global，避免调用方把它变成软连接或局部同步。
+if [ "${#passthrough[@]}" -eq 0 ]; then
+  exec "$repo_root/scripts/sync-agent-rules.sh" --mode copy --group global
+fi
+
 exec "$repo_root/scripts/sync-agent-rules.sh" --mode copy --group global "${passthrough[@]}"

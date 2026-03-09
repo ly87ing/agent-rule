@@ -6,7 +6,7 @@ set -euo pipefail
 usage() {
   cat <<'EOF'
 Usage:
-  ./scripts/sync-agent-rules.sh [--mode copy|symlink] [--group all|global|workspace] [--target NAME] [--dry-run] [--no-backup]
+  ./scripts/sync-agent-rules.sh [--mode copy|symlink] [--group all|global] [--target NAME] [--dry-run] [--no-backup]
 EOF
 }
 
@@ -57,7 +57,7 @@ if [ "$mode" != "copy" ] && [ "$mode" != "symlink" ]; then
   exit 1
 fi
 
-if [ "$group_filter" != "all" ] && [ "$group_filter" != "global" ] && [ "$group_filter" != "workspace" ]; then
+if [ "$group_filter" != "all" ] && [ "$group_filter" != "global" ]; then
   echo "Invalid group: $group_filter" >&2
   exit 1
 fi
@@ -73,6 +73,42 @@ absolute_path() {
   dir="$(cd "$(dirname "$path")" && pwd -P)"
   base="$(basename "$path")"
   printf '%s/%s' "$dir" "$base"
+}
+
+path_within_repo() {
+  local path="$1"
+  case "$path" in
+    "$repo_root"/*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+validate_source_path() {
+  local source_abs="$1"
+  if ! path_within_repo "$source_abs"; then
+    echo "Refusing to use source outside repository: $source_abs" >&2
+    exit 1
+  fi
+  if [ -L "$source_abs" ]; then
+    echo "Refusing to use symlink source file: $source_abs" >&2
+    exit 1
+  fi
+}
+
+validate_target_path() {
+  local target="$1"
+  case "$target" in
+    "$HOME/.codex/AGENTS.md"|\
+    "$HOME/.claude/CLAUDE.md"|\
+    "$HOME/.config/opencode/AGENTS.md"|\
+    "$HOME/.gemini/GEMINI.md")
+      return 0
+      ;;
+    *)
+      echo "Refusing to write unmanaged target path: $target" >&2
+      exit 1
+      ;;
+  esac
 }
 
 target_selected() {
@@ -176,6 +212,9 @@ while IFS='|' read -r name group source_rel target_pattern; do
     echo "Missing source file: $source_abs" >&2
     exit 1
   fi
+
+  validate_source_path "$source_abs"
+  validate_target_path "$target_path"
 
   echo "target: $name ($group)"
   echo "source: $source_abs"

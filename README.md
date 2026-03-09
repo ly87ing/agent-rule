@@ -30,6 +30,12 @@
 ./scripts/reset-agent-rules.sh
 ```
 
+预览重置动作但不落盘：
+
+```bash
+./scripts/reset-agent-rules.sh --dry-run
+```
+
 使用软连接模式：
 
 ```bash
@@ -51,6 +57,7 @@
 ## 说明
 
 - 默认模式是 `copy`，兼容性最好。
-- `reset-agent-rules.sh` 本质上是 `copy` 模式的同步，适合“一键全部重置”。
+- `reset-agent-rules.sh` 固定使用 `copy + global`，不允许通过参数改成 `symlink` 或只同步部分目标。
 - `symlink` 适合个人本机统一维护，但当前仓库只管理全局规则文件，不涉及项目级规则。
+- 同步脚本会严格校验目标路径，只允许写入当前管理的 4 个全局规则文件。
 - 脚本默认会为被覆盖的目标文件创建时间戳备份。

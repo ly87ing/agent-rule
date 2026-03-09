@@ -1,0 +1,5 @@
+# name|group|source|target
+codex_global|global|rules/global/common.md|{{HOME}}/.codex/AGENTS.md
+claude_global|global|rules/global/common.md|{{HOME}}/.claude/CLAUDE.md
+opencode_global|global|rules/global/common.md|{{HOME}}/.config/opencode/AGENTS.md
+gemini_global|global|rules/global/common.md|{{HOME}}/.gemini/GEMINI.md

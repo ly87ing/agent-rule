@@ -1,0 +1,204 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# 用法说明保持简短，避免脚本帮助信息过长。
+usage() {
+  cat <<'EOF'
+Usage:
+  ./scripts/sync-agent-rules.sh [--mode copy|symlink] [--group all|global|workspace] [--target NAME] [--dry-run] [--no-backup]
+EOF
+}
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+manifest_path="$repo_root/config/targets.list"
+
+mode="copy"
+group_filter="all"
+dry_run="false"
+backup_enabled="true"
+selected_targets=()
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --mode)
+      shift
+      mode="${1:-}"
+      ;;
+    --group)
+      shift
+      group_filter="${1:-}"
+      ;;
+    --target)
+      shift
+      selected_targets+=("${1:-}")
+      ;;
+    --dry-run)
+      dry_run="true"
+      ;;
+    --no-backup)
+      backup_enabled="false"
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown argument: $1" >&2
+      usage >&2
+      exit 1
+      ;;
+  esac
+  shift || true
+done
+
+if [ "$mode" != "copy" ] && [ "$mode" != "symlink" ]; then
+  echo "Invalid mode: $mode" >&2
+  exit 1
+fi
+
+if [ "$group_filter" != "all" ] && [ "$group_filter" != "global" ] && [ "$group_filter" != "workspace" ]; then
+  echo "Invalid group: $group_filter" >&2
+  exit 1
+fi
+
+expand_home() {
+  local value="$1"
+  printf '%s' "${value//\{\{HOME\}\}/$HOME}"
+}
+
+absolute_path() {
+  local path="$1"
+  local dir base
+  dir="$(cd "$(dirname "$path")" && pwd -P)"
+  base="$(basename "$path")"
+  printf '%s/%s' "$dir" "$base"
+}
+
+target_selected() {
+  local name="$1"
+  local group="$2"
+  local item
+
+  if [ "$group_filter" != "all" ] && [ "$group_filter" != "$group" ]; then
+    return 1
+  fi
+
+  if [ "${#selected_targets[@]}" -eq 0 ]; then
+    return 0
+  fi
+
+  for item in "${selected_targets[@]}"; do
+    if [ "$item" = "$name" ]; then
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+backup_target() {
+  local target="$1"
+  local timestamp backup_path
+
+  if [ "$backup_enabled" != "true" ]; then
+    return 0
+  fi
+
+  if [ ! -e "$target" ] && [ ! -L "$target" ]; then
+    return 0
+  fi
+
+  timestamp="$(date +%Y%m%d%H%M%S)"
+  backup_path="${target}.bak.${timestamp}"
+  echo "backup: $target -> $backup_path"
+  if [ "$dry_run" = "false" ]; then
+    mv "$target" "$backup_path"
+  fi
+}
+
+sync_copy() {
+  local source_abs="$1"
+  local target="$2"
+
+  if [ -f "$target" ] && [ ! -L "$target" ] && cmp -s "$source_abs" "$target"; then
+    echo "unchanged(copy): $target"
+    return 0
+  fi
+
+  backup_target "$target"
+  echo "copy: $source_abs -> $target"
+  if [ "$dry_run" = "false" ]; then
+    cp "$source_abs" "$target"
+  fi
+}
+
+sync_symlink() {
+  local source_abs="$1"
+  local target="$2"
+  local current_link=""
+
+  if [ -L "$target" ]; then
+    current_link="$(readlink "$target" || true)"
+  fi
+
+  if [ "$current_link" = "$source_abs" ]; then
+    echo "unchanged(symlink): $target"
+    return 0
+  fi
+
+  backup_target "$target"
+  echo "symlink: $target -> $source_abs"
+  if [ "$dry_run" = "false" ]; then
+    ln -s "$source_abs" "$target"
+  fi
+}
+
+matched_count=0
+
+while IFS='|' read -r name group source_rel target_pattern; do
+  [ -z "$name" ] && continue
+  case "$name" in
+    \#*) continue ;;
+  esac
+
+  if ! target_selected "$name" "$group"; then
+    continue
+  fi
+
+  matched_count=$((matched_count + 1))
+
+  source_abs="$(absolute_path "$repo_root/$source_rel")"
+  target_path="$(expand_home "$target_pattern")"
+  target_dir="$(dirname "$target_path")"
+
+  if [ ! -f "$source_abs" ]; then
+    echo "Missing source file: $source_abs" >&2
+    exit 1
+  fi
+
+  echo "target: $name ($group)"
+  echo "source: $source_abs"
+  echo "dest  : $target_path"
+
+  if [ "$dry_run" = "false" ]; then
+    mkdir -p "$target_dir"
+  else
+    echo "mkdir -p: $target_dir"
+  fi
+
+  if [ "$mode" = "copy" ]; then
+    sync_copy "$source_abs" "$target_path"
+  else
+    sync_symlink "$source_abs" "$target_path"
+  fi
+
+  echo
+done < "$manifest_path"
+
+if [ "$matched_count" -eq 0 ]; then
+  echo "No targets matched the provided filters." >&2
+  exit 1
+fi
+
+echo "Done. mode=$mode group=$group_filter matched=$matched_count dry_run=$dry_run"

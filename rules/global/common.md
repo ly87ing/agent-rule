@@ -24,7 +24,7 @@
 - **Explore First:** Start with `codebase-retrieval`, then inspect only the returned files that are actually needed.
 - **Plan Before Editing:** Analyze context and impact before editing instead of guessing file locations or dependencies.
 - **Shared Code Changes:** When modifying common or shared code, explicitly inspect both implementations and existing callers.
-- **Verify:** **CRITICAL**. Run tests, lint, build checks, or other local verification after modification when applicable.
+- **Verify:** **CRITICAL**. Run tests, lint, or other local verification after modification. For frontend, use `playwright-cli`.
 - **Conventions:** Rigorously mimic existing code patterns, naming styles, and structure. Do not introduce new frameworks without clear justification.
 
 ## 4. Architecture: Reuse & Isolation
@@ -49,3 +49,9 @@ Follow the "Vertical Isolation, Horizontal Reuse" strategy:
   - **Missing Data Handling:** Production code must handle missing data via explicit errors or exceptions, typed optional or result patterns, or safe default values. Do not leave runtime-affecting TODO placeholders.
 - **Naming:** Use English (ASCII) for code identifiers, filenames, classes, methods, variables, and constants.
 - **Comments:** Use Chinese (Simplified) for new comments unless the surrounding file already uses an established English comment style that should be preserved.
+
+## 6. Frontend Verification
+
+- **Mandatory:** 任何涉及前端的变更（UI、验证逻辑、流程），**必须**使用 `playwright-cli` 进行验证。
+- **Completion Criteria:** 必须提供 `playwright-cli screenshot` 或 `snapshot` 作为修复/实现生效的证据，否则任务不视为完成。
+- **Skill Synergy:** 具体的执行策略和最佳实践，请严格遵循 `playwright-best-practices` skill。

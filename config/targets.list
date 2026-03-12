@@ -1,5 +1,13 @@
 # name|group|source|target
-codex_global|global|rules/global/common.md|{{HOME}}/.codex/AGENTS.md
-claude_global|global|rules/global/common.md|{{HOME}}/.claude/CLAUDE.md
-opencode_global|global|rules/global/common.md|{{HOME}}/.config/opencode/AGENTS.md
-gemini_global|global|rules/global/common.md|{{HOME}}/.gemini/GEMINI.md
+
+# Main entry files
+codex_global|global|rules/global/main.md|{{HOME}}/.codex/AGENTS.md
+claude_global|global|rules/global/main.md|{{HOME}}/.claude/CLAUDE.md
+opencode_global|global|rules/global/main.md|{{HOME}}/.config/opencode/AGENTS.md
+gemini_global|global|rules/global/main.md|{{HOME}}/.gemini/GEMINI.md
+
+# Module directories
+codex_modules|global|rules/global/modules|{{HOME}}/.codex/modules
+claude_modules|global|rules/global/modules|{{HOME}}/.claude/modules
+opencode_modules|global|rules/global/modules|{{HOME}}/.config/opencode/modules
+gemini_modules|global|rules/global/modules|{{HOME}}/.gemini/modules

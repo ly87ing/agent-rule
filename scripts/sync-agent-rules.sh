@@ -101,7 +101,11 @@ validate_target_path() {
     "$HOME/.codex/AGENTS.md"|\
     "$HOME/.claude/CLAUDE.md"|\
     "$HOME/.config/opencode/AGENTS.md"|\
-    "$HOME/.gemini/GEMINI.md")
+    "$HOME/.gemini/GEMINI.md"|\
+    "$HOME/.codex/modules"|\
+    "$HOME/.claude/modules"|\
+    "$HOME/.config/opencode/modules"|\
+    "$HOME/.gemini/modules")
       return 0
       ;;
     *)
@@ -193,15 +197,26 @@ sync_copy() {
   local source_abs="$1"
   local target="$2"
 
-  if [ -f "$target" ] && [ ! -L "$target" ] && cmp -s "$source_abs" "$target"; then
-    echo "unchanged(copy): $target"
-    return 0
-  fi
-
-  backup_target "$target"
-  echo "copy: $source_abs -> $target"
-  if [ "$dry_run" = "false" ]; then
-    cp "$source_abs" "$target"
+  if [ -d "$source_abs" ]; then
+    if [ -d "$target" ] && [ ! -L "$target" ] && diff -r "$source_abs" "$target" >/dev/null 2>&1; then
+      echo "unchanged(copy): $target"
+      return 0
+    fi
+    backup_target "$target"
+    echo "copy(dir): $source_abs -> $target"
+    if [ "$dry_run" = "false" ]; then
+      cp -R "$source_abs" "$target"
+    fi
+  else
+    if [ -f "$target" ] && [ ! -L "$target" ] && cmp -s "$source_abs" "$target"; then
+      echo "unchanged(copy): $target"
+      return 0
+    fi
+    backup_target "$target"
+    echo "copy: $source_abs -> $target"
+    if [ "$dry_run" = "false" ]; then
+      cp "$source_abs" "$target"
+    fi
   fi
 }
 
@@ -246,8 +261,8 @@ while IFS='|' read -r name group source_rel target_pattern; do
   target_path="$(expand_home "$target_pattern")"
   target_dir="$(dirname "$target_path")"
 
-  if [ ! -f "$source_abs" ]; then
-    echo "Missing source file: $source_abs" >&2
+  if [ ! -e "$source_abs" ]; then
+    echo "Missing source file/dir: $source_abs" >&2
     exit 1
   fi
 

@@ -6,7 +6,6 @@
 - This includes, but is not limited to:
   - Conversational responses.
   - Explanations of code or logic.
-  - Code comments, unless editing an existing non-Chinese-comment code path and preserving the established style is safer.
   - Summaries, reports, reviews, and analysis results.
 - **EXCEPTION:** Professional technical terms may remain in English when translation would reduce clarity.
 
@@ -24,7 +23,7 @@
 - **Explore First:** Start with `codebase-retrieval`, then inspect only the returned files that are actually needed.
 - **Plan Before Editing:** Analyze context and impact before editing instead of guessing file locations or dependencies.
 - **Shared Code Changes:** When modifying common or shared code, explicitly inspect both implementations and existing callers.
-- **Verify:** **CRITICAL**. Run tests, lint, or other local verification after modification. For frontend, use `playwright-cli`.
+- **Verify:** **CRITICAL**. Run tests, lint, or other local verification after modification. For frontend changes, follow Section 6.
 - **Conventions:** Rigorously mimic existing code patterns, naming styles, and structure. Do not introduce new frameworks without clear justification.
 
 ## 4. Architecture: Reuse & Isolation

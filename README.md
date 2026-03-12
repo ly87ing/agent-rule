@@ -11,7 +11,7 @@
 
 ## 目录结构
 
-- `rules/global/common.md`: 所有全局规则共享的单一事实来源
+- `rules/global/main.md`: 所有全局规则共享的单一事实来源
 - `config/targets.list`: 同步目标清单
 - `scripts/sync-agent-rules.sh`: 一键同步脚本
 - `scripts/reset-agent-rules.sh`: 一键重置到仓库基线

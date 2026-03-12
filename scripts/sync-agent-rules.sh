@@ -203,6 +203,9 @@ sync_copy() {
       return 0
     fi
     backup_target "$target"
+    if [ "$dry_run" = "false" ] && { [ -e "$target" ] || [ -L "$target" ]; }; then
+      rm -rf "$target"
+    fi
     echo "copy(dir): $source_abs -> $target"
     if [ "$dry_run" = "false" ]; then
       cp -R "$source_abs" "$target"
@@ -213,6 +216,9 @@ sync_copy() {
       return 0
     fi
     backup_target "$target"
+    if [ "$dry_run" = "false" ] && { [ -e "$target" ] || [ -L "$target" ]; }; then
+      rm -f "$target"
+    fi
     echo "copy: $source_abs -> $target"
     if [ "$dry_run" = "false" ]; then
       cp "$source_abs" "$target"
@@ -235,6 +241,9 @@ sync_symlink() {
   fi
 
   backup_target "$target"
+  if [ "$dry_run" = "false" ] && { [ -e "$target" ] || [ -L "$target" ]; }; then
+    rm -rf "$target"
+  fi
   echo "symlink: $target -> $source_abs"
   if [ "$dry_run" = "false" ]; then
     ln -s "$source_abs" "$target"

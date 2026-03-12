@@ -47,7 +47,7 @@ case "$response" in
   [yY][eE][sS]|[yY]) 
     for f in "${bak_files[@]}"; do
       echo "Deleting $f..."
-      rm -f "$f"
+      rm -rf "$f"
     done
     echo "Done."
     ;;

@@ -19,7 +19,7 @@
 
 - **Architecture & System Design:**
   If your task involves creating new modules, modifying shared/common code, or architectural decisions, you **MUST** read:
-  `modules/architecture.md` (Relative to this file's path, or typically located at `~/.gemini/modules/architecture.md` or equivalent config directory).
+  `modules/architecture.md` (Relative to this file's path, or typically located at `~/.<agent>/modules/architecture.md` or equivalent config directory).
 
 - **Code Style & Integrity:**
   If your task involves writing new code, handling data/config, or adding comments, you **MUST** read:
